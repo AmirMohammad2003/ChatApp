@@ -6,8 +6,8 @@ from . import db
 
 
 class User(db.Document, UserMixin):
-    username = db.StringField(max_length=50, required=True)
-    email = db.EmailField(required=True)
+    username = db.StringField(max_length=50, null=True)
+    email = db.EmailField(required=True, unique=True)
     uuid = db.UUIDField(binary=True, required=True, unique=True)
     date_joined = db.DateTimeField(required=True, default=datetime.utcnow)
     last_seen = db.DateTimeField(required=True, default=datetime.utcnow)

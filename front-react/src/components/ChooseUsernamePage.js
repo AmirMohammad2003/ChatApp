@@ -24,17 +24,17 @@ const LoginPage = () => {
             }}
           >
             <input
-              type="email"
-              id="email"
-              placeholder="Email"
-              name="email"
+              type="text"
+              id="username"
+              placeholder="Username"
+              name="username"
               className="login-page__container__form__input"
             />
             <input
               type="submit"
               id="submit"
-              value="Login"
-              name="login"
+              value="confirm"
+              name="Confirm"
               className="login-page__container__form__input"
               style={{ cursor: "pointer" }}
             />

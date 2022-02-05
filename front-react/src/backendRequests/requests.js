@@ -1,5 +1,5 @@
 export const get_csrf_token = async () => {
-  const response = await fetch("/api/csrf", {
+  const response = await fetch("/api/csrf/", {
     method: "GET",
     credentials: "include",
   });

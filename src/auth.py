@@ -6,7 +6,7 @@ from flask_login import current_user, login_required, login_user, logout_user
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from . import db
-from .forms import LoginForm, RegisterForm
+from .forms import LoginForm
 from .models import User
 
 auth = Blueprint('auth', __name__)
@@ -16,21 +16,18 @@ auth = Blueprint('auth', __name__)
 def login():
     if current_user.is_authenticated:
         return jsonify({"success": True, "message": "You are already logged in"})
-
     form = LoginForm(request.form)
     if form.validate():
-        if (user := User.objects(username=form.username.data).first()) is not None:
+        if (user := User.objects(email=form.email.data).first()) is not None:
 
-            if user.email == form.email.data:
-                # login_user(user)
-                # session['_uuid'] = user.get_uuid()
-                return jsonify({"success": True, "message": "Login successful"})
+            # login_user(user)
+            # session['_uuid'] = user.get_uuid()
+            if (user.username is not None):
+                return jsonify({"success": True, "status": "logged-in", "message": "Login successful"})
 
-            else:
-                return jsonify({"success": False, "message": "Invalid email"})
+        return jsonify({"success": True, "status": "signed-up", "message": "signed-up successful"})
 
-        else:
-            return jsonify({"success": False, "message": "Invalid username"})
+    return jsonify({"success": False, "errors": form.errors})
 
 
 @auth.route('/logout')
@@ -40,33 +37,33 @@ def logout():
     return redirect(url_for('auth.login'))
 
 
-@auth.route('/sign-up', methods=['GET', 'POST'])
-def sign_up():
-    if current_user.is_authenticated:
-        return redirect(url_for('views.chat_room'))
+# @auth.route('/sign-up', methods=['GET', 'POST'])
+# def sign_up():
+#     if current_user.is_authenticated:
+#         return redirect(url_for('views.chat_room'))
 
-    if request.method == 'POST':
-        form = RegisterForm(request.form)
-        if form.validate():
-            if form.password.data == form.password2.data:
-                if User.objects(username=form.username.data).first() is None:
-                    user = User(
-                        username=form.username.data,
-                        hashed_password=generate_password_hash(
-                            form.password.data, method="pbkdf2:sha256:260000"
-                        ),
-                        uuid=uuid4().hex
-                    )
-                    user.save()
-                    login_user(user)
-                    session['_uuid'] = user.uuid
-                    return redirect(url_for('views.chat_room'))
+#     if request.method == 'POST':
+#         form = RegisterForm(request.form)
+#         if form.validate():
+#             if form.password.data == form.password2.data:
+#                 if User.objects(username=form.username.data).first() is None:
+#                     user = User(
+#                         username=form.username.data,
+#                         hashed_password=generate_password_hash(
+#                             form.password.data, method="pbkdf2:sha256:260000"
+#                         ),
+#                         uuid=uuid4().hex
+#                     )
+#                     user.save()
+#                     login_user(user)
+#                     session['_uuid'] = user.uuid
+#                     return redirect(url_for('views.chat_room'))
 
-                else:
-                    flash('username is already taken', category='error')
-            else:
-                flash('passwords should match', category='error')
-        else:
-            flash('form validation failed', category='error')
+#                 else:
+#                     flash('username is already taken', category='error')
+#             else:
+#                 flash('passwords should match', category='error')
+#         else:
+#             flash('form validation failed', category='error')
 
-    return render_template('signup.html')
+#     return render_template('signup.html')
