@@ -1,7 +1,7 @@
 from uuid import uuid4
 
 from flask import (Blueprint, flash, redirect, render_template, request,
-                   session, url_for)
+                   session, url_for, jsonify)
 from flask_login import current_user, login_required, login_user, logout_user
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -12,26 +12,25 @@ from .models import User
 auth = Blueprint('auth', __name__)
 
 
-@auth.route('/login', methods=['GET', 'POST'])
+@auth.route('/login/', methods=['POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('views.chat_room'))
-    if request.method == 'POST':
-        form = LoginForm(request.form)
-        if form.validate():
-            if (user := User.objects(username=form.username.data).first()) is not None:
-                if check_password_hash(user.hashed_password, form.password.data):
-                    login_user(user)
-                    session['_uuid'] = user.get_uuid()
-                    return redirect(url_for('views.chat_room'))
+        return jsonify({"success": True, "message": "You are already logged in"})
 
-                else:
-                    flash('password is incorrect', category='error')
+    form = LoginForm(request.form)
+    if form.validate():
+        if (user := User.objects(username=form.username.data).first()) is not None:
+
+            if user.email == form.email.data:
+                # login_user(user)
+                # session['_uuid'] = user.get_uuid()
+                return jsonify({"success": True, "message": "Login successful"})
 
             else:
-                flash('username is incorrect', category='error')
+                return jsonify({"success": False, "message": "Invalid email"})
 
-    return render_template('login.html')
+        else:
+            return jsonify({"success": False, "message": "Invalid username"})
 
 
 @auth.route('/logout')

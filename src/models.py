@@ -7,8 +7,8 @@ from . import db
 
 class User(db.Document, UserMixin):
     username = db.StringField(max_length=50, required=True)
+    email = db.EmailField(required=True)
     uuid = db.UUIDField(binary=True, required=True, unique=True)
-    hashed_password = db.StringField(max_length=255, required=True)
     date_joined = db.DateTimeField(required=True, default=datetime.utcnow)
     last_seen = db.DateTimeField(required=True, default=datetime.utcnow)
     messages = db.ListField(

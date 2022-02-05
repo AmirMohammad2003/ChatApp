@@ -1,9 +1,10 @@
 from flask import Blueprint, jsonify
 from flask_login import current_user, login_required
 from mongoengine.queryset.visitor import Q
+from flask_wtf.csrf import generate_csrf
 
-from .models import User, Message
 from . import db
+from .models import Message, User
 
 api = Blueprint('api', __name__)
 
@@ -27,6 +28,11 @@ def clean_messages(messages):
 
         msgs.append(msg.copy())
     return msgs
+
+
+@api.route('/csrf/')
+def get_csrf_token():
+    return jsonify({'csrf_token': generate_csrf()})
 
 
 @api.route('/search/<string:query>')
