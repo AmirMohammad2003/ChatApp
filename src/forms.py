@@ -7,3 +7,9 @@ class LoginForm(FlaskForm):
     # username = StringField('Username', validators=[DataRequired()])
     email = EmailField('Email', validators=[DataRequired(), Email()])
     submit = SubmitField()
+
+
+class ChooseUsernameForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired()])
+    # email = EmailField('Email', validators=[DataRequired(), Email()])
+    submit = SubmitField()
