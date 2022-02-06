@@ -1,4 +1,5 @@
-import { handleLoginSubmit } from "../backendRequests/auth";
+import React from "react";
+import { handleChooseUsernameSubmit } from "../backendRequests/auth";
 import { useNavigate } from "react-router-dom";
 
 const LoginPage = () => {
@@ -6,18 +7,21 @@ const LoginPage = () => {
   return (
     <div className="login-page">
       <div className="login-page__container">
-        <div className="login-page__container__title">
-          <h1>Login</h1>
+        <div
+          className="login-page__container__title"
+          style={{ fontSize: "10px" }}
+        >
+          <h1>Choose Your Username</h1>
         </div>
         <div className="login-page__container__form">
           <form
             onSubmit={(e) => {
-              handleLoginSubmit(
+              handleChooseUsernameSubmit(
                 e,
                 (location) => {
                   navigate(location);
                 },
-                "/login/choose-username",
+                "/chat-room/",
                 "/"
               );
               e.preventDefault();
