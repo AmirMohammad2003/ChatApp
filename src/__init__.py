@@ -25,13 +25,18 @@ def create_app():
     csrf_protect.init_app(app)
     mail.init_app(app)
     db.init_app(app)
+    socketio = SocketIO(
+        app,
+        manage_session=False,
+        cookie='_uuid',
+        cors_allowed_origins=["http://127.0.0.1:3000", "http://localhost:3000"]
+    )
     cors.init_app(
         app, resources={
-            r"/(api|auth)/*": {"origins": ["http://127.0.0.1:3000", "http://localhost:3000"]}
+            r"*": {"origins": ["http://127.0.0.1:3000", "http://localhost:3000"]}
         }
     )
     app.session_interface = MongoEngineSessionInterface(db)
-    socketio = SocketIO(app, manage_session=False, cookie='_uuid')
     login_manager.login_view = 'auth.login'
 
     from .models import Message, User
