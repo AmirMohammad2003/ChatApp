@@ -19,6 +19,25 @@ import Container from "@mui/material/Container";
 import Grid from "@mui/material/Grid";
 import io from "socket.io-client";
 
+const ProfileBox = ({ name, onClickCallback = () => {} }) => {
+  return (
+    <>
+      <div
+        style={{
+          width: "100%",
+          color: "white",
+          padding: "20px",
+          borderBottom: "1px solid",
+          cursor: "pointer",
+        }}
+        onClickCallback={onClickCallback}
+      >
+        <p>{name}</p>
+      </div>
+    </>
+  );
+};
+
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
   borderRadius: theme.shape.borderRadius,
@@ -256,16 +275,27 @@ export default () => {
     return (
       <>
         {renderMainMenu()}
-        <Grid container>
-          <Grid item></Grid>
-        </Grid>
+        <div style={{ height: "calc(100vh - 64px)", width: "100%" }}>
+          <Grid container style={{ height: "100%" }}>
+            <Grid
+              item
+              xs={3}
+              style={{ backgroundColor: "#1d2229", borderRight: "1px solid" }}
+            >
+              <ProfileBox name="amir" />
+            </Grid>
+            <Grid item xs={9} style={{ backgroundColor: "#1d2229" }}></Grid>
+          </Grid>
+        </div>
       </>
     );
   };
 
   return (
     <>
-      <Container>{socket ? render() : <div>Loading...</div>}</Container>
+      <Container style={{ height: "100vh" }}>
+        {socket ? render() : <div>Loading...</div>}
+      </Container>
     </>
   );
 };
