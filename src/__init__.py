@@ -1,5 +1,5 @@
 import eventlet
-from flask import Flask, redirect, url_for
+from flask import Flask, jsonify, redirect, url_for
 from flask_cors import CORS
 from flask_login import LoginManager
 from flask_mail import Mail
@@ -21,10 +21,10 @@ cors = CORS(supports_credentials=True)
 def create_app():
     app = Flask(__name__)
     app.config.from_object(BaseConfig)
-    login_manager.init_app(app)
+    db.init_app(app)
+    app.session_interface = MongoEngineSessionInterface(db)
     csrf_protect.init_app(app)
     mail.init_app(app)
-    db.init_app(app)
     socketio = SocketIO(
         app,
         manage_session=False,
@@ -36,14 +36,22 @@ def create_app():
             r"*": {"origins": ["http://127.0.0.1:3000", "http://localhost:3000"]}
         }
     )
-    app.session_interface = MongoEngineSessionInterface(db)
+    login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
 
     from .models import Message, User
 
     @login_manager.user_loader
     def load_user(id):
-        return User.objects.get(pk=id)
+        return User.objects(pk=id).first()
+
+    @login_manager.unauthorized_handler
+    def unauthorized():
+        from flask_login import current_user
+        from flask import session
+        print(session)
+        print(current_user.is_authenticated)
+        return jsonify({"success": False, "message": "Unauthorized"})
 
     from .api import api as _api
     from .auth import auth as _auth
@@ -53,8 +61,8 @@ def create_app():
     app.register_blueprint(_views, url_prefix='/public')
     app.register_blueprint(_api, url_prefix='/api')
 
-    @app.route('/')
-    def redi2():
-        return redirect(url_for('auth.login'))
+    # @app.route('/')
+    # def redi2():
+    #     return redirect(url_for('auth.login'))
 
     return socketio, app

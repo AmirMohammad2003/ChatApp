@@ -30,18 +30,18 @@ def clean_messages(messages):
     return msgs
 
 
-@api.route('/csrf/')
+@api.route('/csrf/', methods=['GET'])
 def get_csrf_token():
     return jsonify({'csrf_token': generate_csrf()})
 
 
-@api.route('/search/<string:query>')
+@api.route('/search/<string:query>/', methods=['GET'])
 @login_required
 def search(query):
     users = User.objects(Q(username__icontains=query.strip()) &
                          Q(id__nin=[current_user.pk]))
 
-    return jsonify(list(map(userrow2dict, users))) if len(users) > 0 else jsonify()
+    return jsonify(list(map(userrow2dict, users))) if len(users) > 0 else jsonify({})
 
 
 @api.route('/add-friend/<int:id>')

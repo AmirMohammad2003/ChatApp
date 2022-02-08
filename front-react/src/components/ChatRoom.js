@@ -30,7 +30,7 @@ const ProfileBox = ({ name, onClickCallback = () => {} }) => {
           borderBottom: "1px solid",
           cursor: "pointer",
         }}
-        onClickCallback={onClickCallback}
+        onClick={onClickCallback}
       >
         <p>{name}</p>
       </div>
@@ -82,17 +82,58 @@ export default () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = useState(null);
   const [socket, setSocket] = useState(null);
+  const [connected, setConnected] = useState(false);
+  const [user_search_results, setUserSearchResults] = useState([]);
 
   const isMenuOpen = Boolean(anchorEl);
   const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
+
+  const connectedListener = async () => {
+    setConnected(true);
+  };
+
+  const disconnectedListener = async () => {
+    setConnected(false);
+  };
 
   useEffect(() => {
     const _socket = io("http://" + document.domain + ":5000/", {
       withCredentials: true,
     });
     setSocket(_socket);
-    return () => _socket.close();
+
+    _socket.on("connect", connectedListener);
+
+    _socket.on("disconnect", disconnectedListener);
+
+    _socket.on("");
+
+    return () => {
+      _socket.off("connect", connectedListener);
+      _socket.off("disconnect", disconnectedListener);
+      _socket.close();
+    };
   }, [setSocket]);
+
+  const handleSearchInputChange = async (e) => {
+    const value = e.target.value;
+    const results = [];
+    if (value.length > 0) {
+      fetch("/api/search/" + value.trim() + "/", {
+        method: "GET",
+        credentials: "include",
+      })
+        .then((_res) => {
+          if (_res.ok) {
+            return _res.json();
+          } else {
+            return new Error("Error searching for users");
+          }
+        })
+        .then((data) => console.log(data))
+        .catch((err) => console.error(err));
+    }
+  };
 
   const handleProfileMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -215,6 +256,9 @@ export default () => {
               <StyledInputBase
                 placeholder="Search…"
                 inputProps={{ "aria-label": "search" }}
+                onChange={(e) => {
+                  handleSearchInputChange(e);
+                }}
               />
             </Search>
             <Box sx={{ flexGrow: 1 }} />
@@ -294,7 +338,7 @@ export default () => {
   return (
     <>
       <Container style={{ height: "100vh" }}>
-        {socket ? render() : <div>Loading...</div>}
+        {socket && connected ? render() : <div>Loading...</div>}
       </Container>
     </>
   );

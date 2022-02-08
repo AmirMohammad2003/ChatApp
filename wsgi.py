@@ -3,8 +3,8 @@ from datetime import datetime
 from flask import request
 from flask_login import current_user
 
-from src.models import Message
 from src import create_app, db
+from src.models import Message
 
 socketio, app = create_app()
 
@@ -12,12 +12,12 @@ users = {}
 
 
 @socketio.on('connect')
-def save_user_sid(data):
+def save_user_sid():
     users[current_user.get_id()] = request.sid
 
 
 @socketio.on('disconnect')
-def delete_user_sid(data):
+def delete_user_sid():
     del users[current_user.get_id()]
 
 
