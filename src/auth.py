@@ -17,7 +17,10 @@ def login():
     form = LoginForm(request.form)
     if form.validate():
         email = form.email.data
-        if (user := User.objects(email=form.email.data).first()) is not None:
+        print(email)
+        (user := User.objects(email=email).first())
+        print(user)
+        if user is not None:
             if (user.username is not None):
                 login_user(user)
                 session['_uuid'] = user.get_uuid()
@@ -57,6 +60,7 @@ def choose_username():
             user = User.objects(email=session['_email']).first()
             if (user is not None):
                 user.username = form.username.data
+                user.save()
                 login_user(user)
                 session['_uuid'] = user.get_uuid()
                 return jsonify({
