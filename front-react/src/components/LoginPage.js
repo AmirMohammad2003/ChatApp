@@ -19,7 +19,7 @@ const LoginPage = () => {
                   navigate(location);
                 },
                 "/login/choose-username",
-                "/"
+                "/chat-room"
               );
               e.preventDefault();
             }}
