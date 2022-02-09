@@ -84,5 +84,6 @@ def choose_username():
 @auth.route('/logout')
 @login_required
 def logout():
+    session.pop('_uuid')
     logout_user()
     return jsonify({"success": True, "message": "Logged out successfully"})
