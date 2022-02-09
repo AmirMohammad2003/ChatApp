@@ -79,7 +79,7 @@ def add_friend():
 @api.route('/load-friends/')
 @login_required
 def load_friends():
-    if (friends := current_user.friends) is not None:
+    if len((friends := current_user.friends)) != 0:
         friends_list = []
         for friend in friends:
             friends_list.append(userrow2dict(friend))

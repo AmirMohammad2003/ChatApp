@@ -112,6 +112,19 @@ export default () => {
 
     _socket.on("disconnect", disconnectedListener);
 
+    fetch("/api/load-friends/")
+      .then((res) => {
+        if (res.ok) {
+          return res.json();
+        }
+        throw new Error("Failed to load friends");
+      })
+      .then((data) => {
+        if (data.success === true) {
+          setFriends(data.friends);
+        }
+      });
+
     // _socket.on("");
 
     return () => {
@@ -354,6 +367,7 @@ export default () => {
   };
 
   const renderFriends = (friends) => {
+    if (friends.length < 1) return;
     console.log("rendering friends.");
     return (
       <>
@@ -391,8 +405,6 @@ export default () => {
                     );
                   })
                 : renderFriends(friends)}
-
-              {/* <ProfileBox name="amir" /> */}
             </Grid>
             <Grid item xs={9} style={{ backgroundColor: "#1d2229" }}></Grid>
           </Grid>
