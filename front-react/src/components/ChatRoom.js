@@ -83,7 +83,7 @@ export default () => {
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = useState(null);
   const [socket, setSocket] = useState(null);
   const [connected, setConnected] = useState(false);
-  const [user_search_results, setUserSearchResults] = useState([]);
+  const [userSearchResults, setUserSearchResults] = useState([]);
 
   const isMenuOpen = Boolean(anchorEl);
   const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
@@ -117,6 +117,10 @@ export default () => {
 
   const handleSearchInputChange = async (e) => {
     const value = e.target.value;
+    if (value.trim() === "") {
+      setUserSearchResults([]);
+      return;
+    }
     const results = [];
     if (value.length > 0) {
       fetch("/api/search/" + value.trim() + "/", {
@@ -130,10 +134,15 @@ export default () => {
             return new Error("Error searching for users");
           }
         })
-        .then((data) => console.log(data))
+        .then((data) => {
+          console.log(data);
+          setUserSearchResults(data);
+        })
         .catch((err) => console.error(err));
     }
   };
+
+  const handleProfileBoxClick = async (e, id) => {};
 
   const handleProfileMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -256,7 +265,7 @@ export default () => {
               <StyledInputBase
                 placeholder="Search…"
                 inputProps={{ "aria-label": "search" }}
-                onChange={(e) => {
+                onKeyUp={(e) => {
                   handleSearchInputChange(e);
                 }}
               />
@@ -326,7 +335,19 @@ export default () => {
               xs={3}
               style={{ backgroundColor: "#1d2229", borderRight: "1px solid" }}
             >
-              <ProfileBox name="amir" />
+              {userSearchResults !== [] &&
+                userSearchResults.map((user, index) => {
+                  return (
+                    <ProfileBox
+                      key={index}
+                      name={user.name}
+                      onClickCallback={(e) => {
+                        handleProfileBoxClick(e, user.id);
+                      }}
+                    />
+                  );
+                })}
+              {/* <ProfileBox name="amir" /> */}
             </Grid>
             <Grid item xs={9} style={{ backgroundColor: "#1d2229" }}></Grid>
           </Grid>
