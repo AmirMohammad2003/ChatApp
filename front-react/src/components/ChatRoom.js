@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useReducer } from "react";
 import { styled, alpha } from "@mui/material/styles";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
@@ -87,6 +87,8 @@ export default () => {
   const [userSearchResults, setUserSearchResults] = useState([]);
   const [friends, setFriends] = useState([]);
 
+  const [any, forceUpdate] = useReducer((x) => x + 1, 0);
+
   const searchInput = useRef();
 
   const isMenuOpen = Boolean(anchorEl);
@@ -110,7 +112,7 @@ export default () => {
 
     _socket.on("disconnect", disconnectedListener);
 
-    _socket.on("");
+    // _socket.on("");
 
     return () => {
       _socket.off("connect", connectedListener);
@@ -159,8 +161,10 @@ export default () => {
       .then((_res) => _res.json())
       .then((data) => {
         if (data["success"] === true) {
-          setFriends([...friends, data["friend"]]);
-          searchInput.current.value = "";
+          searchInput.current.childNodes[0].value = "";
+          setUserSearchResults([]);
+          setFriends((friends) => [...friends, data["friend"]]);
+          forceUpdate();
         } else {
           return new Error("Error adding friend");
         }
@@ -349,7 +353,20 @@ export default () => {
     );
   };
 
+  const renderFriends = (friends) => {
+    console.log("rendering friends.");
+    return (
+      <>
+        {friends.map((friend, index) => {
+          console.log("rendering friend " + index);
+          return <ProfileBox name={friend.name} key={index} />;
+        })}
+      </>
+    );
+  };
+
   const render = () => {
+    console.log("rendering");
     return (
       <>
         {renderMainMenu()}
@@ -360,18 +377,21 @@ export default () => {
               xs={3}
               style={{ backgroundColor: "#1d2229", borderRight: "1px solid" }}
             >
-              {userSearchResults !== [] &&
-                userSearchResults.map((user, index) => {
-                  return (
-                    <ProfileBox
-                      key={index}
-                      name={user.name}
-                      onClickCallback={(e) => {
-                        handleProfileBoxClick(e, user.id);
-                      }}
-                    />
-                  );
-                })}
+              {userSearchResults.length > 0
+                ? userSearchResults.map((user, index) => {
+                    console.log("rendering search results");
+                    return (
+                      <ProfileBox
+                        key={index}
+                        name={user.name}
+                        onClickCallback={(e) => {
+                          handleProfileBoxClick(e, user.id);
+                        }}
+                      />
+                    );
+                  })
+                : renderFriends(friends)}
+
               {/* <ProfileBox name="amir" /> */}
             </Grid>
             <Grid item xs={9} style={{ backgroundColor: "#1d2229" }}></Grid>
