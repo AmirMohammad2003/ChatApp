@@ -1,9 +1,7 @@
-from datetime import datetime
-
 from flask import request
 from flask_login import current_user
 
-from src import create_app, db
+from src import create_app
 from src.models import Message
 
 socketio, app = create_app()
