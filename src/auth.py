@@ -52,7 +52,7 @@ def choose_username():
         return jsonify({"success": True, "message": "You are already logged in"})
     form = ChooseUsernameForm(request.form)
     if form.validate():
-        if (User.objects(email=form.username.data).first()) is None:
+        if (User.objects(username=form.username.data).first()) is None:
             user = User.objects(email=session['_email']).first()
             if (user is not None):
                 user.username = form.username.data
