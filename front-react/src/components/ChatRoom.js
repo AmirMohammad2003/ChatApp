@@ -6,6 +6,7 @@ import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import InputBase from "@mui/material/InputBase";
+import TextField from "@mui/material/TextField";
 import Badge from "@mui/material/Badge";
 import MenuItem from "@mui/material/MenuItem";
 import Menu from "@mui/material/Menu";
@@ -28,7 +29,7 @@ const ProfileBox = ({ name, onClickCallback = () => {} }) => {
           width: "100%",
           color: "white",
           padding: "20px",
-          borderBottom: "1px solid black",
+          borderBottom: "2px solid black",
           cursor: "pointer",
         }}
         onClick={onClickCallback}
@@ -90,6 +91,7 @@ export default () => {
   const [any, forceUpdate] = useReducer((x) => x + 1, 0);
 
   const searchInput = useRef();
+  const messageInput = useRef();
 
   const isMenuOpen = Boolean(anchorEl);
   const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
@@ -379,6 +381,30 @@ export default () => {
     );
   };
 
+  const renderMessages = () => {
+    return (
+      <>
+        <div
+          style={{ height: "calc(100% - 100px)", overflowY: "scroll" }}
+        ></div>
+        <div style={{ height: "100px" }}>
+          <input
+            type="text"
+            ref={messageInput}
+            placeholder="Message..."
+            style={{
+              height: "50%",
+              width: "100%",
+              padding: "20px",
+              fontSize: "12pt",
+              border: "none",
+            }}
+          />
+        </div>
+      </>
+    );
+  };
+
   const render = () => {
     console.log("rendering");
     return (
@@ -406,7 +432,9 @@ export default () => {
                   })
                 : renderFriends(friends)}
             </Grid>
-            <Grid item xs={9} style={{ backgroundColor: "#1d2229" }}></Grid>
+            <Grid item xs={9} style={{ backgroundColor: "#1d2229" }}>
+              {renderMessages()}
+            </Grid>
           </Grid>
         </div>
       </>
