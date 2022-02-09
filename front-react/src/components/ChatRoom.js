@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { styled, alpha } from "@mui/material/styles";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
@@ -18,6 +18,7 @@ import MoreIcon from "@mui/icons-material/MoreVert";
 import Container from "@mui/material/Container";
 import Grid from "@mui/material/Grid";
 import io from "socket.io-client";
+import { get_csrf_token } from "../backendRequests/requests";
 
 const ProfileBox = ({ name, onClickCallback = () => {} }) => {
   return (
@@ -27,7 +28,7 @@ const ProfileBox = ({ name, onClickCallback = () => {} }) => {
           width: "100%",
           color: "white",
           padding: "20px",
-          borderBottom: "1px solid",
+          borderBottom: "1px solid black",
           cursor: "pointer",
         }}
         onClick={onClickCallback}
@@ -84,6 +85,9 @@ export default () => {
   const [socket, setSocket] = useState(null);
   const [connected, setConnected] = useState(false);
   const [userSearchResults, setUserSearchResults] = useState([]);
+  const [friends, setFriends] = useState([]);
+
+  const searchInput = useRef();
 
   const isMenuOpen = Boolean(anchorEl);
   const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
@@ -142,7 +146,27 @@ export default () => {
     }
   };
 
-  const handleProfileBoxClick = async (e, id) => {};
+  const handleProfileBoxClick = async (e, id) => {
+    fetch("/api/add-friend/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": await get_csrf_token(),
+      },
+      credentials: "include",
+      body: JSON.stringify({ id: id }),
+    })
+      .then((_res) => _res.json())
+      .then((data) => {
+        if (data["success"] === true) {
+          setFriends([...friends, data["friend"]]);
+          searchInput.current.value = "";
+        } else {
+          return new Error("Error adding friend");
+        }
+      })
+      .catch((e) => console.error(e));
+  };
 
   const handleProfileMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -265,6 +289,7 @@ export default () => {
               <StyledInputBase
                 placeholder="Search…"
                 inputProps={{ "aria-label": "search" }}
+                ref={searchInput}
                 onKeyUp={(e) => {
                   handleSearchInputChange(e);
                 }}

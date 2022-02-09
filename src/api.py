@@ -1,4 +1,5 @@
-from flask import Blueprint, jsonify
+from calendar import c
+from flask import Blueprint, jsonify, request
 from flask_login import current_user, login_required
 from mongoengine.queryset.visitor import Q
 from flask_wtf.csrf import generate_csrf
@@ -46,14 +47,18 @@ def search(query):
     return jsonify(list(map(userrow2dict, users))) if len(users) > 0 else jsonify([])
 
 
-@api.route('/add-friend/<int:id>')
+@api.route('/add-friend/', methods=['POST'])
 @login_required
-def add_friend(id):
-    if (user := User.objects(pk=id).first()) is not None:
-        if current_user.friends(pk__exact=id).first() is not None:
-            return jsonify({"success": True, "friend": userrow2dict(user)})
+def add_friend():
+    _id = request.json.get('id') or None
+    if _id is None:
+        return jsonify({'success': False, 'message': 'No friend id provided'})
 
-        current_user.update_one(push__author=user)
+    if (user := User.objects(pk=_id).first()) is not None:
+        if user not in current_user.friends:
+            current_user.friends.append(user.pk)
+            current_user.save()
+
         return jsonify({"success": True, "friend": userrow2dict(user)})
 
     return jsonify({"success": False})
