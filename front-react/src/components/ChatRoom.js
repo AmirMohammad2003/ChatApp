@@ -21,7 +21,25 @@ import Grid from "@mui/material/Grid";
 import io from "socket.io-client";
 import { get_csrf_token } from "../backendRequests/requests";
 
-const ProfileBox = ({ name, onClickCallback = () => {} }) => {
+const MessageBox = ({ message, time, sender }) => {
+  console.log(message);
+  console.log(time);
+  console.log(sender);
+  return (
+    <div className={sender ? "message sender" : "message receiver"}>
+      <p>{message}</p>
+      <span className="timestamp">{time}</span>
+    </div>
+  );
+};
+
+const ProfileBox = ({
+  name,
+  onClickCallback = (e) => {
+    e.preventDefault();
+  },
+  isActive = false,
+}) => {
   return (
     <>
       <div
@@ -29,10 +47,11 @@ const ProfileBox = ({ name, onClickCallback = () => {} }) => {
           width: "100%",
           color: "white",
           padding: "20px",
-          borderBottom: "2px solid black",
+          borderBottom: "2px solid #145ea8",
           cursor: "pointer",
         }}
         onClick={onClickCallback}
+        className={isActive ? "active" : ""}
       >
         <p>{name}</p>
       </div>
@@ -87,11 +106,13 @@ export default () => {
   const [connected, setConnected] = useState(false);
   const [userSearchResults, setUserSearchResults] = useState([]);
   const [friends, setFriends] = useState([]);
-
+  const [activeChat, setActiveChat] = useState(null);
+  const [messages, setMessages] = useState([]);
   const [any, forceUpdate] = useReducer((x) => x + 1, 0);
 
-  const searchInput = useRef();
-  const messageInput = useRef();
+  const searchInput = useRef(null);
+  const messageInput = useRef(null);
+  const messagesEnd = useRef(null);
 
   const isMenuOpen = Boolean(anchorEl);
   const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
@@ -102,6 +123,19 @@ export default () => {
 
   const disconnectedListener = async () => {
     setConnected(false);
+  };
+
+  const handleMessageReceived = async (message) => {
+    console.log(message["from"]);
+    console.log(activeChat);
+    if (message["from"] === activeChat) {
+      setMessages((messages) => [...messages, message]);
+    }
+  };
+
+  const handleMessageSent = async (message) => {
+    setMessages((messages) => [...messages, message]);
+    messageInput.current.value = "";
   };
 
   useEffect(() => {
@@ -127,14 +161,29 @@ export default () => {
         }
       });
 
-    // _socket.on("");
-
     return () => {
       _socket.off("connect", connectedListener);
       _socket.off("disconnect", disconnectedListener);
       _socket.close();
     };
   }, [setSocket]);
+
+  useEffect(() => {
+    if (socket === null) return;
+    socket.on("messageReceived", handleMessageReceived);
+    socket.on("messageSent", handleMessageSent);
+
+    return () => {
+      socket.off("messageReceived", handleMessageReceived);
+      socket.off("messageSent", handleMessageSent);
+    };
+  }, [socket, activeChat]);
+
+  useEffect(() => {
+    if (messagesEnd.current) {
+      messagesEnd.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
 
   const handleSearchInputChange = async (e) => {
     const value = e.target.value;
@@ -179,12 +228,24 @@ export default () => {
           searchInput.current.childNodes[0].value = "";
           setUserSearchResults([]);
           setFriends((friends) => [...friends, data["friend"]]);
-          forceUpdate();
+          // forceUpdate();
+          setActiveChat(data["friend"].id);
         } else {
           return new Error("Error adding friend");
         }
       })
       .catch((e) => console.error(e));
+  };
+
+  const handleSendMessage = async (event) => {
+    event.preventDefault();
+    const message = messageInput.current.value;
+    if (message.trim().length === 0) return;
+
+    socket.emit("send", {
+      message: message,
+      to: activeChat,
+    });
   };
 
   const handleProfileMenuOpen = (event) => {
@@ -375,18 +436,65 @@ export default () => {
       <>
         {friends.map((friend, index) => {
           console.log("rendering friend " + index);
-          return <ProfileBox name={friend.name} key={index} />;
+          return (
+            <ProfileBox
+              name={friend.name}
+              key={index}
+              onClickCallback={(e) => {
+                setActiveChat(friend.id);
+              }}
+              isActive={activeChat === friend.id}
+            />
+          );
         })}
       </>
     );
   };
 
   const renderMessages = () => {
+    if (activeChat === null) {
+      return (
+        <>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <h2 style={{ color: "white" }}>Select a chat to start messaging</h2>
+          </div>
+        </>
+      );
+    }
+
     return (
       <>
-        <div
-          style={{ height: "calc(100% - 100px)", overflowY: "scroll" }}
-        ></div>
+        <div style={{ height: "calc(100vh - 170px)", overflowY: "hidden" }}>
+          <div
+            style={{
+              height: "100%",
+              overflowX: "hidden",
+              overflowY: "auto",
+            }}
+          >
+            {messages.length > 0 &&
+              messages.map((message, index) => {
+                console.log(message);
+                return (
+                  <>
+                    <MessageBox
+                      key={index}
+                      message={message["message"]}
+                      time={message["timestamp"]}
+                      sender={message["sender"]}
+                    />
+                  </>
+                );
+              })}
+            <div ref={messagesEnd} style={{ clear: "both" }}></div>
+          </div>
+        </div>
         <div style={{ height: "100px" }}>
           <input
             type="text"
@@ -398,6 +506,18 @@ export default () => {
               padding: "20px",
               fontSize: "12pt",
               border: "none",
+              borderTop: "2px solid #145ea8",
+              borderBottom: "2px solid #145ea8",
+              backgroundColor: "#181a1b",
+              color: "#736b5e",
+            }}
+            className="no-focus-border"
+            onKeyDown={(e) => {
+              if (e.code === "Enter") {
+                if (e.target.value.trim() === "") return;
+                handleSendMessage(e);
+                e.preventDefault();
+              }
             }}
           />
         </div>
@@ -407,6 +527,7 @@ export default () => {
 
   const render = () => {
     console.log("rendering");
+    console.log(activeChat);
     return (
       <>
         {renderMainMenu()}
@@ -415,7 +536,10 @@ export default () => {
             <Grid
               item
               xs={3}
-              style={{ backgroundColor: "#1d2229", borderRight: "1px solid" }}
+              style={{
+                backgroundColor: "#1d2229",
+                borderRight: "1px solid #145ea8",
+              }}
             >
               {userSearchResults.length > 0
                 ? userSearchResults.map((user, index) => {
